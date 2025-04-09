@@ -27,14 +27,18 @@
     "@electron-forge/plugin-fuses": "^7.8.0",
     "@electron-forge/plugin-webpack": "^7.8.0",
     "@electron/fuses": "^1.8.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.16",
     "@vercel/webpack-asset-relocator-loader": "^1.7.3",
+    "babel-preset-react": "^6.24.1",
     "copy-webpack-plugin": "^13.0.0",
     "css-loader": "^6.11.0",
     "electron": "35.1.4",
     "electron-forge": "^5.2.4",
+    "eslint-plugin-react": "^7.37.5",
     "node-loader": "^2.1.0",
     "pug": "^2.0.4",
     "pug-loader": "^2.4.0",
+    "react-refresh": "^0.17.0",
     "sass": "^1.86.3",
     "sass-loader": "^16.0.5",
     "style-loader": "^3.3.4",
@@ -42,6 +46,8 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   }
 }

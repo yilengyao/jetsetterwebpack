@@ -16,26 +16,61 @@ const createWindow = () => {
     height: 600,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+      // Enable Node integration to allow require in renderer
+      nodeIntegration: true,
+      contextIsolation: false
     },
   });
 
   // and load the index.html of the app.
   // mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+  try {
+    // Create temp directory for resources
+    const tempDir = path.join(app.getPath('temp'), 'electron-jade-app');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
 
-  // Path to your jade file
-  const jadePath = path.join(__dirname, 'index.jade');
+    // Correct path to your jade file (it's in .webpack/main)
+    const jadePath = path.join(__dirname, 'index.jade');
 
-  // Compile the jade file to HTML
-  const html = pug.renderFile(jadePath, {
-    // You can pass variables to your template here
-    pretty: true
-  });
+    // Copy style.css from src to temp directory as style.css
+    const srcStylePath = path.join(app.getAppPath(), 'src', 'style.scss');
+    const tempStylePath = path.join(tempDir, 'style.css');
 
-  // Load the compiled HTML
-  mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+    if (fs.existsSync(srcStylePath)) {
+      fs.copyFileSync(srcStylePath, tempStylePath);
+    }
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+    // Copy renderer.js to temp directory
+    const rendererPath = path.join(app.getAppPath(), '.webpack', 'renderer', 'main_window', 'index.js');
+    const tempRendererPath = path.join(tempDir, 'renderer.js');
+
+    if (fs.existsSync(rendererPath)) {
+      fs.copyFileSync(rendererPath, tempRendererPath);
+    }
+
+    // Compile the jade file to HTML
+    const html = pug.renderFile(jadePath, {
+      // You can pass variables to your template here
+      pretty: true,
+      baseUrl: `file://${tempDir}/`
+    });
+
+    // Write HTML to temp directory
+    const tempHtmlPath = path.join(tempDir, 'index.html');
+    console.log('HTML Path:', tempHtmlPath);
+    fs.writeFileSync(tempHtmlPath, html);
+
+    // Load the HTML from temp directory
+    mainWindow.loadURL(`file://${tempHtmlPath}`);
+    } catch (err) {
+      console.error('Error loading jade file:', err);
+      // Fallback to webpack entry
+      mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+   }
+    // Open the DevTools.
+    mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished
