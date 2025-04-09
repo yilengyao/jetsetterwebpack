@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "CommonJS",
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"]
+}
