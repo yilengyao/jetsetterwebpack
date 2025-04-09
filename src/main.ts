@@ -1,6 +1,8 @@
 /// <reference path="./declarations.d.ts" />
-const { app, BrowserWindow } = require('electron');
-const path = require('node:path');
+import { app, BrowserWindow } from 'electron';
+import path from 'node:path';
+import pug from 'pug';
+import fs from 'fs'; 
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -18,7 +20,19 @@ const createWindow = () => {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+  // mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+  // Path to your jade file
+  const jadePath = path.join(__dirname, 'index.jade');
+
+  // Compile the jade file to HTML
+  const html = pug.renderFile(jadePath, {
+    // You can pass variables to your template here
+    pretty: true
+  });
+
+  // Load the compiled HTML
+  mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();

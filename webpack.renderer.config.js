@@ -1,3 +1,11 @@
+const rules = require('./webpack.rules');
+// const plugins = require('./webpack.plugins');
+
+// rules.push({
+//   test: /\.jade$/,
+//   use: 'pug-loader'
+// });
+
 module.exports = {
   module: {
     rules: [
@@ -20,7 +28,8 @@ module.exports = {
       },
     ],
   },
+  // plugins: plugins,
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['.js', '.ts', '.jsx', '.tsx', '.css', '.jade'],
   },
 };
