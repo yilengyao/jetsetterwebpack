@@ -3,6 +3,7 @@ import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import pug from 'pug';
 import fs from 'fs'; 
+import * as sass from 'sass';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -39,7 +40,18 @@ const createWindow = () => {
     const tempStylePath = path.join(tempDir, 'style.css');
 
     if (fs.existsSync(srcStylePath)) {
-      fs.copyFileSync(srcStylePath, tempStylePath);
+      try {
+        // Compile SCSS to CSS
+        const result = sass.compile(srcStylePath);
+
+        // Write the compiled CSS to the tmp directory
+        fs.writeFileSync(tempStylePath, result.css);
+        console.log('SCSS compiled successfully');
+      } catch (sassError) {
+        console.error('Error compiling SCSS:', sassError);
+        // If SCSS compilation fails, fall back to copying the file
+        fs.copyFileSync(srcStylePath, tempStylePath);
+      }
     }
 
     // Copy renderer.js to temp directory
@@ -59,7 +71,6 @@ const createWindow = () => {
 
     // Write HTML to temp directory
     const tempHtmlPath = path.join(tempDir, 'index.html');
-    console.log('HTML Path:', tempHtmlPath);
     fs.writeFileSync(tempHtmlPath, html);
 
     // Load the HTML from temp directory
