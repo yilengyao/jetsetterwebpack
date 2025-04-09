@@ -41,7 +41,8 @@ module.exports = {
               "js": "./src/renderer.ts",
               "preload": {
                 "js": "./src/preload.ts"
-              }
+              },
+              outputPaths: ['.webpack/renderer'] 
             }
           ]
         }

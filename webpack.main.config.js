@@ -11,6 +11,8 @@ module.exports = {
   // Add this external configuration
   externals: {
     'pug': 'commonjs pug',
+    'sass': 'commonjs sass',
+    'chokidar': 'commonjs chokidar'
   },
   plugins: [
     new CopyWebpackPlugin({

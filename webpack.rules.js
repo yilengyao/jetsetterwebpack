@@ -16,6 +16,17 @@ module.exports = [
       },
     },
   },
+    // Fix: Make sure TypeScript rule is properly configured
+    {
+      test: /\.tsx?$/,  // This matches both .ts and .tsx files
+      exclude: /(node_modules|\.webpack)/,
+      use: {
+        loader: 'ts-loader',
+        options: {
+          transpileOnly: true  // This speeds up compilation but skips type checking
+        }
+      }
+    }
   // Put your webpack loader rules in this array.  This is where you would put
   // your ts-loader configuration for instance:
   /**
