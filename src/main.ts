@@ -10,78 +10,139 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+let reloadWatcher: any = null;
+
+console.log("Original env:", process.env.NODE_ENV);
+
+// In development mode, enable electron-reload
+if (process.env.NODE_ENV && process.env.NODE_ENV.trim() === 'development') {
+  try {
+    console.log("Attempting to set up live reload in development mode");
+    
+    // Skip the buggy electron-reload entirely
+    const appPath = app.getAppPath();
+    console.log("App path:", appPath);
+    
+    
+    // Instead, directly watch for changes and reload manually
+    if (!process.env.DEV_SERVER && process.type === 'browser') {
+      console.log("Setting up manual file watching");
+      
+      // Watch the key directories
+      const chokidar = require('chokidar');
+      const watcher = chokidar.watch([
+        path.join(appPath, 'src'),
+        path.join(appPath, '.webpack')
+      ], {
+        ignored: /node_modules/,
+        persistent: true
+      });
+      
+      // When files change, reload the app
+      watcher.on('change', (path) => {
+        console.log(`File ${path} changed, reloading...`);
+        if (mainWindow) {
+          mainWindow.reload();
+        }
+      });
+      
+      // Store the watcher to prevent garbage collection
+      reloadWatcher = watcher;
+    }
+  } catch (err) {
+    console.error('Failed to set up electron-reload:', err);
+  }
+}
+
+let mainWindow: BrowserWindow | null = null;
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       // Enable Node integration to allow require in renderer
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      // Add these settings:
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      // This enables the preload script to work properly
+      // with webpack's bundling:
+      sandbox: false
     },
   });
 
-  // and load the index.html of the app.
-  // mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-  try {
-    // Create temp directory for resources
-    const tempDir = path.join(app.getPath('temp'), 'electron-jade-app');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-
-    // Correct path to your jade file (it's in .webpack/main)
-    const jadePath = path.join(__dirname, 'index.jade');
-
-    // Copy style.css from src to temp directory as style.css
-    const srcStylePath = path.join(app.getAppPath(), 'src', 'style.scss');
-    const tempStylePath = path.join(tempDir, 'style.css');
-
-    if (fs.existsSync(srcStylePath)) {
-      try {
-        // Compile SCSS to CSS
-        const result = sass.compile(srcStylePath);
-
-        // Write the compiled CSS to the tmp directory
-        fs.writeFileSync(tempStylePath, result.css);
-        console.log('SCSS compiled successfully');
-      } catch (sassError) {
-        console.error('Error compiling SCSS:', sassError);
-        // If SCSS compilation fails, fall back to copying the file
-        fs.copyFileSync(srcStylePath, tempStylePath);
+  // Choose which URL to load based on environment
+  if (process.env.NODE_ENV === 'development' && process.env.DEV_SERVER) {
+    // Use webpack dev server with hot reloading
+    console.log('Loading from webpack dev server');
+    mainWindow.loadURL('http://localhost:8080');
+  } else {
+    // and load the index.html of the app.
+    // mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+    try {
+      // Create temp directory for resources
+      const tempDir = path.join(app.getPath('temp'), 'electron-jade-app');
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
       }
-    }
 
-    // Copy renderer.js to temp directory
-    const rendererPath = path.join(app.getAppPath(), '.webpack', 'renderer', 'main_window', 'index.js');
-    const tempRendererPath = path.join(tempDir, 'renderer.js');
+      // Correct path to your jade file (it's in .webpack/main)
+      const jadePath = path.join(__dirname, 'index.jade');
 
-    if (fs.existsSync(rendererPath)) {
-      fs.copyFileSync(rendererPath, tempRendererPath);
-    }
+      // Copy style.css from src to temp directory as style.css
+      const srcStylePath = path.join(app.getAppPath(), 'src', 'style.scss');
+      const tempStylePath = path.join(tempDir, 'style.css');
 
-    // Compile the jade file to HTML
-    const html = pug.renderFile(jadePath, {
-      // You can pass variables to your template here
-      pretty: true,
-      baseUrl: `file://${tempDir}/`
-    });
+      if (fs.existsSync(srcStylePath)) {
+        try {
+          // Compile SCSS to CSS
+          const result = sass.compile(srcStylePath);
 
-    // Write HTML to temp directory
-    const tempHtmlPath = path.join(tempDir, 'index.html');
-    fs.writeFileSync(tempHtmlPath, html);
+          // Write the compiled CSS to the tmp directory
+          fs.writeFileSync(tempStylePath, result.css);
+          console.log('SCSS compiled successfully');
+        } catch (sassError) {
+          console.error('Error compiling SCSS:', sassError);
+          // If SCSS compilation fails, fall back to copying the file
+          fs.copyFileSync(srcStylePath, tempStylePath);
+        }
+      }
 
-    // Load the HTML from temp directory
-    mainWindow.loadURL(`file://${tempHtmlPath}`);
+      // Copy renderer.js to temp directory
+      const rendererPath = path.join(app.getAppPath(), '.webpack', 'renderer', 'main_window', 'index.js');
+      const tempRendererPath = path.join(tempDir, 'renderer.js');
+
+      if (fs.existsSync(rendererPath)) {
+        fs.copyFileSync(rendererPath, tempRendererPath);
+      }
+
+      // Compile the jade file to HTML
+      const html = pug.renderFile(jadePath, {
+        // You can pass variables to your template here
+        pretty: true,
+        baseUrl: `file://${tempDir}/`
+      });
+
+      // Write HTML to temp directory
+      const tempHtmlPath = path.join(tempDir, 'index.html');
+      fs.writeFileSync(tempHtmlPath, html);
+
+      console.log('Loading from webpack build');
+      mainWindow.loadURL(`file://${tempHtmlPath}`);
     } catch (err) {
       console.error('Error loading jade file:', err);
       // Fallback to webpack entry
       mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-   }
-    // Open the DevTools.
+    }  
+  }
+  // Open DevTools in development mode
+  if (process.env.NODE_ENV === 'development') {
     mainWindow.webContents.openDevTools();
+  }
 };
 
 // This method will be called when Electron has finished
