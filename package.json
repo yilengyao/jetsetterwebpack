@@ -6,8 +6,8 @@
   "main": ".webpack/main",
   "scripts": {
     "start": "cross-env NODE_ENV=production electron-forge start",
-    "dev": "cross-env NODE_ENV=development DEV_SERVER=true ts-node dev-server.ts",
-    "package": "cross-env NODE_ENV=production electron-forge package",
+    "dev": "bash ./dev-package.sh",
+    "package": "bash ./package-app.sh",
     "make": "cross-env NODE_ENV=production electron-forge make",
     "publish": "cross-env NODE_ENV=production electron-forge publish",
     "lint": "echo \"No linting configured\""

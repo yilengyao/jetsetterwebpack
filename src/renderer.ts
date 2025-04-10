@@ -29,4 +29,3 @@
 import './style.scss';
 
 console.log('👋 This message is being logged by "renderer.js", included via webpack');
-console.log("hi");
