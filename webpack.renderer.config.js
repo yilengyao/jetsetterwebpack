@@ -10,9 +10,9 @@ const entry = isDevelopment
   ? [
       // Explicitly set the correct host and port
       'webpack-hot-middleware/client?path=http://localhost:8080/__webpack_hmr&timeout=20000&reload=true',
-      './src/renderer.ts'
+      './src/renderer.tsx'
     ]
-  : './src/renderer.ts';
+  : './src/renderer.tsx';
 
 // const plugins = require('./webpack.plugins');
 
