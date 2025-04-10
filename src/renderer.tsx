@@ -25,7 +25,23 @@
  *  });
  * ```
  */
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import Application from './components/Application';
 
 import './style.scss';
 
-console.log('👋 This message is being logged by "renderer.js", included via webpack');
+// Get the container element
+const container = document.getElementById('application') || document.getElementById('root');
+
+// Ensure container exists
+if (!container) {
+    throw new Error('Target container not found in the DOM');
+}
+
+// Create a root
+const root = createRoot(container);
+
+// InitialRender
+root.render(<Application />)
+

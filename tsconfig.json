@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "ES2024",
     "module": "CommonJS",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "jsx": "react"
   },
   "include": ["src/**/*"]
 }
