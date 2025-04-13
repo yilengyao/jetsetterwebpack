@@ -13,10 +13,11 @@ interface ItemsProps {
     title: string;
     items: ItemType[];
     onCheckOff: (item: ItemType) => void;
+    onDelete: (item: ItemType) => void;
 }
 
 // Use the interface to type the props, then destructure them
-const Items: React.FC<ItemsProps> = ({ title, items, onCheckOff }) => {
+const Items: React.FC<ItemsProps> = ({ title, items, onCheckOff, onDelete }) => {
     return (
         <section className="Items">
             <h2>{ title }</h2>
@@ -24,6 +25,7 @@ const Items: React.FC<ItemsProps> = ({ title, items, onCheckOff }) => {
                 <Item
                     key={item.id}
                     onCheckOff={() => onCheckOff(item)}
+                    onDelete={() => onDelete(item)}
                     {...item}
                 />
             ))}
