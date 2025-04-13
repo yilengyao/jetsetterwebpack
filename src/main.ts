@@ -1,14 +1,25 @@
 /// <reference path="./declarations.d.ts" />
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import pug from 'pug';
 import fs from 'fs'; 
 import * as sass from 'sass';
+import database from './database';
+import setupQueries from './queries';
+// import { MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY } from './declarations';
+
+// Declare Webpack variables globally to satisfy TypeScript
+// These will be overwritten at runtime by Electron Forge
+const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY = '__PRELOAD_WEBPACK_ENTRY__';
+const MAIN_WINDOW_WEBPACK_ENTRY = '__MAIN_WEBPACK_ENTRY__';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
+
+// Initialize the database
+const db = database(app);
 
 let reloadWatcher: any = null;
 
@@ -56,16 +67,28 @@ if (process.env.NODE_ENV && process.env.NODE_ENV.trim() === 'development') {
 
 let mainWindow: BrowserWindow | null = null;
 
+
 const createWindow = () => {
+  console.log("MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY:", MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY);
+  console.log("MAIN_WINDOW_WEBPACK_ENTRY:", MAIN_WINDOW_WEBPACK_ENTRY);
+  console.log("__dirname:", __dirname);
+
+  const preloadPath = path.join(__dirname, '..', 'renderer', 'main_window', 'preload.js');
+
+  // Check if preload script exists
+  if (!fs.existsSync(preloadPath)) {
+    console.error('Preload script not found at:', preloadPath);
+    // Could add fallback here
+  }
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
-      preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      // Enable Node integration to allow require in renderer
-      nodeIntegration: true,
-      contextIsolation: false,
+      preload: preloadPath,
+      nodeIntegration: false,
+      contextIsolation: true,
       // Add these settings:
       webSecurity: true,
       allowRunningInsecureContent: false,
@@ -171,3 +194,5 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+
+setupQueries(db);

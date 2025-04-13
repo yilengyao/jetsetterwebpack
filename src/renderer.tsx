@@ -42,6 +42,11 @@ if (!container) {
 // Create a root
 const root = createRoot(container);
 
+  // Add a safety check
+  if (!window.electronAPI || !window.electronAPI.database) {
+    console.error("electronAPI or database is not available!");
+  }
+
 // InitialRender
 root.render(<Application />)
 

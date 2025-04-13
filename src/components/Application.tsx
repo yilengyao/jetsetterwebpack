@@ -9,12 +9,14 @@ export interface Item {
 }
 
 const Application: React.FC = () => {
-    const [items, setItems] = useState<Item[]>([
-        { value: 'Pants', id: Date.now(), packed: false}
-    ]);
+    const [items, setItems] = useState<Item[]>([]);
 
-    const addItem = (item: Item) => {
-        setItems([...items, item]);
+    const addItem = (item: Item) => {    
+        window.electronAPI.database.addItem(item);
+        window.electronAPI.database.fetchItems()
+            .then((items: Item[]) => {
+                setItems(items);
+            });
     }
 
     const markAsPacked = (item: Item) => {
@@ -28,8 +30,8 @@ const Application: React.FC = () => {
         setItems(markedItems);
     }
 
-    const unpackedItems = items.filter(item => !item.packed);
-    const packedItems = items.filter(item => item.packed);
+    const unpackedItems = items ? items.filter(item => !item.packed) : [];
+    const packedItems = items ? items.filter(item => item.packed) : [];
 
     return (
         <div className="Application">

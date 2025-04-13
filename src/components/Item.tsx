@@ -1,13 +1,17 @@
 import React from 'react';
 
-interface ItemType {
+export interface ItemType {
     id: number;
     value: string;
     packed: boolean;
+}
+
+// Define props interface
+interface ItemProp extends ItemType {
     onCheckOff: () => void;
 }
 
-const Item: React.FC<ItemType> = ({ packed, id, value, onCheckOff }) => {
+const Item: React.FC<ItemProp> = ({ packed, id, value, onCheckOff }) => {
     return (
         <article className="item">
             <label>

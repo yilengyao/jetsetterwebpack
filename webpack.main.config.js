@@ -12,7 +12,13 @@ module.exports = {
   externals: {
     'pug': 'commonjs pug',
     'sass': 'commonjs sass',
-    'chokidar': 'commonjs chokidar'
+    'chokidar': 'commonjs chokidar',
+    'tedious': 'commonjs tedious',
+    'mysql': 'commonjs mysql',
+    'mysql2': 'commonjs mysql2',
+    'oracledb': 'commonjs oracledb',
+    'pg': 'commonjs pg',
+    'pg-query-stream': 'commonjs pg-query-stream'
   },
   plugins: [
     new CopyWebpackPlugin({
