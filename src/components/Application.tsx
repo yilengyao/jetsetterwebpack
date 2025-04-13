@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NewItem from './NewItem';
 import Items from './Items';
 
@@ -11,6 +11,13 @@ export interface Item {
 const Application: React.FC = () => {
     const [items, setItems] = useState<Item[]>([]);
 
+    useEffect(() => {
+        window.electronAPI.database.fetchItems()
+            .then((items: Item[]) => {
+                setItems(items);
+            });
+    }, []);
+
     const addItem = (item: Item) => {    
         window.electronAPI.database.addItem(item);
         window.electronAPI.database.fetchItems()
@@ -20,14 +27,35 @@ const Application: React.FC = () => {
     }
 
     const markAsPacked = (item: Item) => {
-        const otherItems = items.filter(i => i.id !== item.id);
-        const updatedItem = { ...item, packed: !item.packed };
-        setItems([...otherItems, updatedItem]);
+        window.electronAPI.database.markAsPacked(item.id);
+        window.electronAPI.database.fetchItems()
+            .then((items: Item[]) => {
+                setItems(items);
+            });
     }
 
     const markAllAsUnpacked = () => {
-        const markedItems = items.map(item => ({ ...item, packed: false }));
-        setItems(markedItems);
+        window.electronAPI.database.markAllAsUnpacked();
+        window.electronAPI.database.fetchItems()
+            .then((items: Item[]) => {
+                setItems(items);
+            });
+    }
+
+    const deleteItem = (item: Item) => {
+        window.electronAPI.database.deleteItem(item.id);
+        window.electronAPI.database.fetchItems()
+            .then((items: Item[]) => {
+                setItems(items);
+            });
+    }
+
+    const deleteUnpackedItems = () => {
+        window.electronAPI.database.deleteUnpackedItems();
+        window.electronAPI.database.fetchItems()
+            .then((items: Item[]) => {
+                setItems(items);
+            });
     }
 
     const unpackedItems = items ? items.filter(item => !item.packed) : [];
@@ -40,17 +68,25 @@ const Application: React.FC = () => {
                 title="Unpacked Items"
                 items={unpackedItems}
                 onCheckOff={markAsPacked}
+                onDelete={deleteItem}
             />
             <Items
                 title="Packed Items"
                 items={packedItems}
                 onCheckOff={markAsPacked}
+                onDelete={deleteItem}
             />
             <button 
                 className="button fullWidth"
                 onClick={markAllAsUnpacked}
             >
                 Mark All As Unpacked
+            </button>
+            <button 
+                className="button fullWidth"
+                onClick={deleteUnpackedItems}
+            >
+                Delete Unpacked Items
             </button>
         </div>
     )

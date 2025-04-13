@@ -67,18 +67,22 @@ if (process.env.NODE_ENV && process.env.NODE_ENV.trim() === 'development') {
 
 let mainWindow: BrowserWindow | null = null;
 
+// Create temp directory for resources
+const tempDir = path.join(app.getPath('temp'), 'electron-jade-app');
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
 
 const createWindow = () => {
-  console.log("MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY:", MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY);
-  console.log("MAIN_WINDOW_WEBPACK_ENTRY:", MAIN_WINDOW_WEBPACK_ENTRY);
-  console.log("__dirname:", __dirname);
-
-  const preloadPath = path.join(__dirname, '..', 'renderer', 'main_window', 'preload.js');
-
-  // Check if preload script exists
-  if (!fs.existsSync(preloadPath)) {
+  const preloadPath = path.join(app.getAppPath(), '.webpack', 'renderer', 'main_window', 'preload.js');
+  const tempPreloadPath = path.join(tempDir, 'preload.js');
+  
+  console.log('Looking for preload at:', preloadPath);
+  if (fs.existsSync(preloadPath)) {
+    fs.copyFileSync(preloadPath, tempPreloadPath);
+    console.log('Preload script copied successfully');
+  } else {
     console.error('Preload script not found at:', preloadPath);
-    // Could add fallback here
   }
 
   // Create the browser window.
@@ -86,7 +90,7 @@ const createWindow = () => {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: preloadPath,
+      preload: tempPreloadPath,
       nodeIntegration: false,
       contextIsolation: true,
       // Add these settings:
@@ -195,4 +199,4 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
-setupQueries(db);
+setupQueries(db, ipcMain);
